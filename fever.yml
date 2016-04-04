@@ -5,8 +5,6 @@
   vars:
     port: 80
     domain: fever.jbmorley.co.uk
-    aliases:
-      - fever2.jbmorley.co.uk
     admin: hello@jbmorley.co.uk
   vars_files:
     - passwords.yml
