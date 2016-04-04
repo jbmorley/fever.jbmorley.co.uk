@@ -1,0 +1,21 @@
+---
+# Usage:
+
+- name: fever.jbmorley.co.uk
+  hosts: jbmorley
+  vars:
+
+    port: 80
+    domain: fever.jbmorley.co.uk
+    admin: hello@jbmorley.co.uk
+
+  tasks:
+
+    - name: configure fever.jbmorley.co.uk
+      include: tasks/create_vhost.yml
+
+  handlers:
+
+    - name: restart apache2
+      service: name=apache2 state=restarted
+      become: yes
