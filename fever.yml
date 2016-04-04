@@ -1,12 +1,14 @@
 ---
 # Usage:
 
-- name: fever.jbmorley.co.uk
+- name: deploy fever
   hosts: jbmorley
   vars:
 
     port: 80
     domain: fever.jbmorley.co.uk
+    aliases:
+      - fever2.jbmorley.co.uk
     admin: hello@jbmorley.co.uk
 
   tasks:
@@ -29,8 +31,27 @@
 
     - name: unzip fever
       unarchive: src=http://feedafever.com/gateway/public/fever.zip dest="/var/www/{{ domain }}" copy=no
+      notify:
+        - move files
+        - delete unwanted files
+        - update permissions
 
   handlers:
+
+    - name: move files
+      command: mv "/var/www/{{ domain }}/fever/boot.php" \
+                  "/var/www/{{ domain }}/fever/safety-reboot.php" \
+                  "/var/www/{{ domain }}/fever/safety-unlace.php" \
+                  "/var/www/{{ domain }}"
+      become: yes
+
+    - name: delete unwanted files
+      command: rm -r "/var/www/{{ domain }}/fever"
+      become: yes
+
+    - name: update permissions
+      file: dest="/var/www/{{ domain }}" mode=0755 recurse=yes
+      become: yes
 
     - name: restart apache2
       service: name=apache2 state=restarted

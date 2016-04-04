@@ -7,5 +7,5 @@ Usage
 -----
 
 ```bash
-ansible-playbook ansible/fever.yml --ask-become-pass
+ansible-playbook fever.yml --ask-become-pass
 ```
