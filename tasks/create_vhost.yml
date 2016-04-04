@@ -1,6 +1,10 @@
 # Creates and configures an apache vhost, ensuring apache is installed beforehand.
 ---
 
+- name: create site directory
+  file: path="/var/www/{{ domain }}" state=directory owner="{{ ansible_user_id }}" group="{{ ansible_user_id }}"
+  become: yes
+
 - name: create virtual host file
   template: src=virtualhost.conf dest="/etc/apache2/sites-available/{{ domain }}.conf"
   become: yes
@@ -9,8 +13,6 @@
   command: a2ensite "{{ domain }}"
   args:
     creates: "/etc/apache2/sites-enabled/{{ domain }}.conf"
-  become: yes
-
-- name: create site directory
-  file: path="/var/www/{{ domain }}" state=directory owner="{{ ansible_user_id }}" group="{{ ansible_user_id }}"
+  notify:
+    - restart node
   become: yes

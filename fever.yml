@@ -1,0 +1,34 @@
+---
+# Usage:
+
+- name: fever.jbmorley.co.uk
+  hosts: jbmorley
+  vars:
+
+    port: 80
+    domain: fever.jbmorley.co.uk
+    admin: hello@jbmorley.co.uk
+
+  tasks:
+
+    - name: create site directory
+      file: path="/var/www/{{ domain }}" state=directory owner="{{ ansible_user_id }}" group="{{ ansible_user_id }}"
+      become: yes
+
+    - name: create virtual host file
+      template: src=virtualhost.conf dest="/etc/apache2/sites-available/{{ domain }}.conf"
+      become: yes
+
+    - name: enable site
+      command: a2ensite "{{ domain }}"
+      args:
+        creates: "/etc/apache2/sites-enabled/{{ domain }}.conf"
+      notify:
+        - restart node
+      become: yes
+
+  handlers:
+
+    - name: restart apache2
+      service: name=apache2 state=restarted
+      become: yes
