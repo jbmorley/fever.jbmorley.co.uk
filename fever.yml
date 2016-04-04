@@ -18,6 +18,7 @@
       with_items:
         - apache2
         - php5-mysql
+        - php5-gd
       notify:
         - restart apache2
       become: yes
@@ -43,7 +44,8 @@
       notify:
         - move files
         - delete unwanted files
-        - update permissions
+        - update file permissions
+        - update directory permissions
 
   handlers:
 
@@ -58,8 +60,12 @@
       command: rm -r "/var/www/{{ domain }}/fever"
       become: yes
 
-    - name: update permissions
+    - name: update file permissions
       file: dest="/var/www/{{ domain }}" mode=0755 recurse=yes
+      become: yes
+
+    - name: update directory permissions
+      file: dest="/var/www/{{ domain }}" mode=0777 recurse=no
       become: yes
 
     - name: restart apache2
