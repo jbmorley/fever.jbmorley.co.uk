@@ -62,6 +62,9 @@
         - copy safety-unlace.php
         - update directory permissions
 
+    - name: create cron job
+      cron: name="update feeds" minute="0,15,40,45" job="curl -L -s http://{{ domain }}/?refresh"
+
   handlers:
 
     - name: copy boot.php
