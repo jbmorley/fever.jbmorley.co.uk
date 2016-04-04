@@ -13,6 +13,15 @@
 
   tasks:
 
+    - name: install packages
+      apt: name={{ item }} update_cache=yes state=latest
+      with_items:
+        - apache2
+        - php5-mysql
+      notify:
+        - restart apache2
+      become: yes
+
     - name: create site directory
       file: path="/var/www/{{ domain }}" state=directory owner="{{ ansible_user_id }}" group="{{ ansible_user_id }}"
       become: yes
@@ -26,7 +35,7 @@
       args:
         creates: "/etc/apache2/sites-enabled/{{ domain }}.conf"
       notify:
-        - restart node
+        - restart apache2
       become: yes
 
     - name: unzip fever
