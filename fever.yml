@@ -1,15 +1,15 @@
 ---
-# Usage:
 
-- name: deploy fever
+- name: fever
   hosts: jbmorley
   vars:
-
     port: 80
     domain: fever.jbmorley.co.uk
     aliases:
       - fever2.jbmorley.co.uk
     admin: hello@jbmorley.co.uk
+  vars_files:
+    - passwords.yml
 
   tasks:
 
@@ -19,9 +19,21 @@
         - apache2
         - php5-mysql
         - php5-gd
+        - python-mysqldb
+        - mysql-server
+        - mysql-client
       notify:
         - restart apache2
       become: yes
+
+    - name: secure msyql root user
+      mysql_user: login_user=root name=root password="{{ mysql_root_password }}" login_unix_socket=/var/run/mysqld/mysqld.sock
+
+    - name: copy mysql user config
+      template: src=mysql.cnf dest="/home/{{ ansible_user_id }}/.my.cnf"
+
+    - name: create mysql fever user
+      mysql_user: name=fever password="{{ mysql_user_password }}" priv=*.*:ALL,GRANT state=present
 
     - name: create site directory
       file: path="/var/www/{{ domain }}" state=directory owner="{{ ansible_user_id }}" group="{{ ansible_user_id }}"
@@ -39,34 +51,30 @@
         - restart apache2
       become: yes
 
+    - name: create temporary directory
+      file: path="/tmp/{{ domain }}" state=directory
+
     - name: unzip fever
-      unarchive: src=http://feedafever.com/gateway/public/fever.zip dest="/var/www/{{ domain }}" copy=no
+      unarchive: src=http://feedafever.com/gateway/public/fever.zip dest="/tmp/{{ domain }}" copy=no
       notify:
-        - move files
-        - delete unwanted files
-        - update file permissions
+        - copy boot.php
+        - copy safety-reboot.php
+        - copy safety-unlace.php
         - update directory permissions
 
   handlers:
 
-    - name: move files
-      command: mv "/var/www/{{ domain }}/fever/boot.php" \
-                  "/var/www/{{ domain }}/fever/safety-reboot.php" \
-                  "/var/www/{{ domain }}/fever/safety-unlace.php" \
-                  "/var/www/{{ domain }}"
-      become: yes
+    - name: copy boot.php
+      copy: src="/tmp/{{ domain }}/fever/boot.php" dest="/var/www/{{ domain }}/boot.php" remote_src=yes mode=0755
 
-    - name: delete unwanted files
-      command: rm -r "/var/www/{{ domain }}/fever"
-      become: yes
+    - name: copy safety-reboot.php
+      copy: src="/tmp/{{ domain }}/fever/safety-reboot.php" dest="/var/www/{{ domain }}/safety-reboot.php" remote_src=yes mode=0755
 
-    - name: update file permissions
-      file: dest="/var/www/{{ domain }}" mode=0755 recurse=yes
-      become: yes
+    - name: copy safety-unlace.php
+      copy: src="/tmp/{{ domain }}/fever/safety-unlace.php" dest="/var/www/{{ domain }}/safety-unlace.php" remote_src=yes mode=0755
 
     - name: update directory permissions
       file: dest="/var/www/{{ domain }}" mode=0777 recurse=no
-      become: yes
 
     - name: restart apache2
       service: name=apache2 state=restarted
