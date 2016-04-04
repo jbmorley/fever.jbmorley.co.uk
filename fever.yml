@@ -27,6 +27,9 @@
         - restart node
       become: yes
 
+    - name: unzip fever
+      unarchive: src=http://feedafever.com/gateway/public/fever.zip dest="/var/www/{{ domain }}" copy=no
+
   handlers:
 
     - name: restart apache2
